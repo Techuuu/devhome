@@ -55,6 +55,13 @@
                     <MenuFlyout/>
                 </Button.Flyout>
             </Button>
+            <Button Content="&#xE711;"
+                    FontFamily="{StaticResource SymbolThemeFontFamily}" FontSize="{ThemeResource CaptionTextBlockFontSize}"
+                    VerticalAlignment="Top" HorizontalAlignment="Right" Margin="15,10,15,5" BorderThickness="0" Padding="5"
+                    Background="Transparent"
+                    Visibility="Collapsed"
+                    Click="CancelEditWidget">
+            </Button>
         </Grid>
 
         <!-- Widget content -->

@@ -213,17 +213,28 @@ public sealed partial class WidgetControl : UserControl
         };
         menuItemCustomize.Click += OnCustomizeWidgetClick;
         widgetMenuFlyout.Items.Add(menuItemCustomize);
+
+        if (!widgetViewModel.IsCustomizable)
+        {
+            menuItemCustomize.IsEnabled = false;
+        }
     }
 
-    private void OnCustomizeWidgetClick(object sender, RoutedEventArgs e)
+    private async void OnCustomizeWidgetClick(object sender, RoutedEventArgs e)
     {
         if (sender is MenuFlyoutItem customizeMenuItem)
         {
             if (customizeMenuItem?.Tag is WidgetViewModel widgetViewModel)
             {
                 widgetViewModel.IsInEditMode = true;
+                await widgetViewModel.Widget.NotifyCustomizationRequestedAsync();
             }
         }
+    }
+
+    private void CancelEditWidget(object sender, RoutedEventArgs e)
+    {
+        WidgetSource.IsInEditMode = false;
     }
 
     private async void OnActualThemeChanged(FrameworkElement sender, object args)

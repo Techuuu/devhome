@@ -117,6 +117,11 @@ internal class SSHWalletWidget : CoreWidget
         }
     }
 
+    public override void OnCustomizationRequested(WidgetCustomizationRequestedArgs customizationRequestedArgs)
+    {
+        SetConfigure(ConfigFile);
+    }
+
     private void HandleConnect(WidgetActionInvokedArgs args)
     {
         var data = args.Data;
@@ -148,6 +153,12 @@ internal class SSHWalletWidget : CoreWidget
         var dataObject = JsonSerializer.Deserialize(data, SourceGenerationContext.Default.DataPayload);
         if (dataObject != null && dataObject.ConfigFile != null)
         {
+            if (!string.Equals(dataObject.ConfigFile, ConfigFile, StringComparison.Ordinal))
+            {
+                FileWatcher?.Dispose();
+                ContentData = EmptyJson;
+            }
+
             var updateRequestOptions = new WidgetUpdateRequestOptions(Id)
             {
                 Data = GetConfiguration(dataObject.ConfigFile),
@@ -367,11 +378,11 @@ internal class SSHWalletWidget : CoreWidget
         UpdateWidget();
     }
 
-    private void SetConfigure()
+    private void SetConfigure(string currentConfigFile = "")
     {
         FileWatcher?.Dispose();
         ActivityState = WidgetActivityState.Configure;
-        ConfigFile = string.Empty;
+        ConfigFile = currentConfigFile;
         Page = WidgetPageState.Configure;
         LogCurrentState();
         UpdateWidget();

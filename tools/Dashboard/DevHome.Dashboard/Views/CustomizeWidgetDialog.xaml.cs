@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using AdaptiveCards.Rendering.WinUI3;
 using DevHome.Common.Extensions;
 using DevHome.Dashboard.Helpers;
 using DevHome.Dashboard.Services;
@@ -17,8 +16,6 @@ namespace DevHome.Dashboard.Views;
 
 public sealed partial class CustomizeWidgetDialog : ContentDialog
 {
-    public Widget EditedWidget { get; set; }
-
     public WidgetViewModel ViewModel { get; set; }
 
     private readonly IWidgetHostingService _hostingService;
@@ -26,10 +23,9 @@ public sealed partial class CustomizeWidgetDialog : ContentDialog
     private readonly WidgetDefinition _widgetDefinition;
     private static DispatcherQueue _dispatcher;
 
-    public CustomizeWidgetDialog(DispatcherQueue dispatcher, WidgetDefinition widgetDefinition)
+    public CustomizeWidgetDialog(Widget widget, DispatcherQueue dispatcher, WidgetDefinition widgetDefinition)
     {
-        ViewModel = new WidgetViewModel(null, Microsoft.Windows.Widgets.WidgetSize.Large, widgetDefinition, dispatcher);
-        ViewModel.IsInEditMode = true;
+        ViewModel = new WidgetViewModel(widget, Microsoft.Windows.Widgets.WidgetSize.Large, widgetDefinition, dispatcher);
 
         _hostingService = Application.Current.GetService<IWidgetHostingService>();
 
@@ -46,38 +42,21 @@ public sealed partial class CustomizeWidgetDialog : ContentDialog
         this.Loaded += InitializeWidgetCustomization;
     }
 
-    private async void InitializeWidgetCustomization(object sender, RoutedEventArgs e)
+    private void InitializeWidgetCustomization(object sender, RoutedEventArgs e)
     {
         var size = WidgetHelpers.GetLargestCapabilitySize(_widgetDefinition.GetWidgetCapabilities());
-
-        // Create the widget for configuration. We will need to delete it if the dialog is closed without updating.
-        var widget = await _hostingService.GetWidgetHost()?.CreateWidgetAsync(_widgetDefinition.Id, size);
-        if (widget != null)
-        {
-            Log.Logger()?.ReportInfo("CustomizeWidgetDialog", $"Created Widget {widget.Id}");
-            ViewModel.Widget = widget;
-        }
-        else
-        {
-            Log.Logger()?.ReportError("CustomizeWidgetDialog", $"Error creating Widget {_widgetDefinition.Id}");
-        }
+        ViewModel.WidgetSize = size;
     }
 
     private void UpdateWidgetButton_Click(object sender, RoutedEventArgs e)
     {
         Log.Logger()?.ReportDebug("CustomizeWidgetDialog", $"Exiting dialog, updated widget");
-        EditedWidget = ViewModel.Widget;
         HideDialog();
     }
 
-    private async void CancelButton_Click(object sender, RoutedEventArgs e)
+    private void CancelButton_Click(object sender, RoutedEventArgs e)
     {
         Log.Logger()?.ReportDebug("CustomizeWidgetDialog", $"Exiting dialog, cancel button clicked");
-        var widgetIdToDelete = ViewModel.Widget.Id;
-        await ViewModel.Widget.DeleteAsync();
-        Log.Logger()?.ReportInfo("CustomizeWidgetDialog", $"Deleted Widget {widgetIdToDelete}");
-
-        EditedWidget = null;
         HideDialog();
     }
 
@@ -103,7 +82,6 @@ public sealed partial class CustomizeWidgetDialog : ContentDialog
         if (_widgetDefinition.Id.Equals(deletedDefinitionId, StringComparison.Ordinal))
         {
             Log.Logger()?.ReportDebug("CustomizeWidgetDialog", $"Exiting dialog, widget definition was deleted");
-            EditedWidget = null;
             _hostingService.GetWidgetCatalog()!.WidgetDefinitionDeleted -= WidgetCatalog_WidgetDefinitionDeleted;
             _dispatcher.TryEnqueue(() =>
             {
