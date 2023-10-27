@@ -11,7 +11,7 @@ public enum WidgetActivityState
 
     /// <summary>
     /// Widget is in this state after it is created before it has data assigned to it and before it
-    /// is pinned. Once data is assigned this state should never be reached.
+    /// is pinned. It can also reach this state if the user chose to Customize the widget.
     /// </summary>
     Configure,
 

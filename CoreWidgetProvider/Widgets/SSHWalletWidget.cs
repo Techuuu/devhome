@@ -278,7 +278,7 @@ internal class SSHWalletWidget : CoreWidget
 
                     var numberOfEntries = GetNumberOfHostEntries();
 
-                    configurationData = FillConfigurationData(true, ConfigFile, numberOfEntries, false);
+                    configurationData = FillConfigurationData(true, ConfigFile, numberOfEntries, true);
                 }
                 else
                 {
@@ -374,6 +374,13 @@ internal class SSHWalletWidget : CoreWidget
     {
         FileWatcher?.Dispose();
         ActivityState = WidgetActivityState.Configure;
+        var data = JsonSerializer.Deserialize<JsonObject>(ContentData);
+        if (data != null && !data.ContainsKey("configuring"))
+        {
+            data.Add("configuring", true);
+            ContentData = data.ToString();
+        }
+
         ConfigFile = currentConfigFile;
         Page = WidgetPageState.Configure;
         LogCurrentState();

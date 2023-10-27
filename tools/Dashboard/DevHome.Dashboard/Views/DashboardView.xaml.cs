@@ -447,6 +447,7 @@ public partial class DashboardView : ToolPage
         var originalSize = widgetViewModel.WidgetSize;
         var widgetDef = ViewModel.WidgetHostingService.GetWidgetCatalog()!.GetWidgetDefinition(widgetViewModel.Widget.DefinitionId);
 
+        widgetViewModel.StopListeningForWidgetUpdated();
         var dialog = new CustomizeWidgetDialog(widgetViewModel.Widget, _dispatcher, widgetDef)
         {
             // XamlRoot must be set in the case of a ContentDialog running in a Desktop app.
@@ -456,6 +457,7 @@ public partial class DashboardView : ToolPage
         _ = await dialog.ShowAsync();
 
         widgetViewModel.IsInEditMode = false;
+        widgetViewModel.StartListeningForWidgetUpdated();
 
         // Put back the original size.
         await widgetViewModel.Widget.SetSizeAsync(originalSize);

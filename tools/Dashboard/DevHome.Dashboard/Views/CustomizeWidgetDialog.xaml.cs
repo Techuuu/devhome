@@ -10,7 +10,6 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.Windows.Widgets.Hosts;
-using WinUIEx;
 
 namespace DevHome.Dashboard.Views;
 
@@ -20,32 +19,35 @@ public sealed partial class CustomizeWidgetDialog : ContentDialog
 
     private readonly IWidgetHostingService _hostingService;
 
+    private readonly Widget _widget;
     private readonly WidgetDefinition _widgetDefinition;
     private static DispatcherQueue _dispatcher;
 
     public CustomizeWidgetDialog(Widget widget, DispatcherQueue dispatcher, WidgetDefinition widgetDefinition)
     {
-        ViewModel = new WidgetViewModel(widget, Microsoft.Windows.Widgets.WidgetSize.Large, widgetDefinition, dispatcher);
-
         _hostingService = Application.Current.GetService<IWidgetHostingService>();
 
         this.InitializeComponent();
 
+        _widget = widget;
         _widgetDefinition = widgetDefinition;
         _dispatcher = dispatcher;
-
-        // Get the application root window so we know when it has closed.
-        Application.Current.GetService<WindowEx>().Closed += OnMainWindowClosed;
 
         _hostingService.GetWidgetCatalog()!.WidgetDefinitionDeleted += WidgetCatalog_WidgetDefinitionDeleted;
 
         this.Loaded += InitializeWidgetCustomization;
     }
 
-    private void InitializeWidgetCustomization(object sender, RoutedEventArgs e)
+    private async void InitializeWidgetCustomization(object sender, RoutedEventArgs e)
     {
         var size = WidgetHelpers.GetLargestCapabilitySize(_widgetDefinition.GetWidgetCapabilities());
-        ViewModel.WidgetSize = size;
+
+        ViewModel = new WidgetViewModel(_widget, size, _widgetDefinition, _dispatcher)
+        {
+            IsInEditMode = true,
+        };
+
+        await ViewModel.Widget.NotifyCustomizationRequestedAsync();
     }
 
     private void UpdateWidgetButton_Click(object sender, RoutedEventArgs e)
@@ -62,17 +64,10 @@ public sealed partial class CustomizeWidgetDialog : ContentDialog
 
     private void HideDialog()
     {
-        Application.Current.GetService<WindowEx>().Closed -= OnMainWindowClosed;
         _hostingService.GetWidgetCatalog()!.WidgetDefinitionDeleted -= WidgetCatalog_WidgetDefinitionDeleted;
         ViewModel.IsInEditMode = false;
 
         this.Hide();
-    }
-
-    private async void OnMainWindowClosed(object sender, WindowEventArgs args)
-    {
-        Log.Logger()?.ReportInfo("CustomizeWidgetDialog", $"Window Closed, delete partially created widget");
-        await ViewModel.Widget.DeleteAsync();
     }
 
     private void WidgetCatalog_WidgetDefinitionDeleted(WidgetCatalog sender, WidgetDefinitionDeletedEventArgs args)

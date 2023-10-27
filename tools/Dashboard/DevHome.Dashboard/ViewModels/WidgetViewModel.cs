@@ -84,18 +84,6 @@ public partial class WidgetViewModel : ObservableObject
         }
     }
 
-    partial void OnIsInEditModeChanged(bool oldValue, bool newValue)
-    {
-        if (newValue == true)
-        {
-            Widget.WidgetUpdated -= HandleWidgetUpdated;
-        }
-        else
-        {
-            Widget.WidgetUpdated += HandleWidgetUpdated;
-        }
-    }
-
     public WidgetViewModel(
         Widget widget,
         WidgetSize widgetSize,
@@ -319,5 +307,15 @@ public partial class WidgetViewModel : ObservableObject
     {
         Log.Logger()?.ReportDebug("WidgetViewModel", $"HandleWidgetUpdated for widget {sender.Id}");
         await RenderWidgetFrameworkElementAsync();
+    }
+
+    public void StopListeningForWidgetUpdated()
+    {
+        Widget.WidgetUpdated -= HandleWidgetUpdated;
+    }
+
+    public void StartListeningForWidgetUpdated()
+    {
+        Widget.WidgetUpdated += HandleWidgetUpdated;
     }
 }
