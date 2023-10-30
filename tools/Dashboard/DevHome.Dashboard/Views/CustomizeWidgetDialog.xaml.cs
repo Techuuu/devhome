@@ -25,6 +25,12 @@ public sealed partial class CustomizeWidgetDialog : ContentDialog
 
     public CustomizeWidgetDialog(Widget widget, DispatcherQueue dispatcher, WidgetDefinition widgetDefinition)
     {
+        var size = WidgetHelpers.GetLargestCapabilitySize(widgetDefinition.GetWidgetCapabilities());
+
+        ViewModel = new WidgetViewModel(null, size, _widgetDefinition, dispatcher)
+        {
+            IsInEditMode = true,
+        };
         _hostingService = Application.Current.GetService<IWidgetHostingService>();
 
         this.InitializeComponent();
@@ -40,13 +46,7 @@ public sealed partial class CustomizeWidgetDialog : ContentDialog
 
     private async void InitializeWidgetCustomization(object sender, RoutedEventArgs e)
     {
-        var size = WidgetHelpers.GetLargestCapabilitySize(_widgetDefinition.GetWidgetCapabilities());
-
-        ViewModel = new WidgetViewModel(_widget, size, _widgetDefinition, _dispatcher)
-        {
-            IsInEditMode = true,
-        };
-
+        ViewModel.Widget = _widget;
         await ViewModel.Widget.NotifyCustomizationRequestedAsync();
     }
 
