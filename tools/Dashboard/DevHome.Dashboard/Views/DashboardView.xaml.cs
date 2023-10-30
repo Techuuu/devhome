@@ -439,11 +439,9 @@ public partial class DashboardView : ToolPage
         }
     }
 
-    // We can't truly edit a widget once it has been pinned. Instead, simulate editing by
-    // removing the old widget and creating a new one.
     private async Task EditWidget(WidgetViewModel widgetViewModel)
     {
-        // Get info about the widget we're "editing".
+        // Get info about the widget we're editing.
         var originalSize = widgetViewModel.WidgetSize;
         var widgetDef = ViewModel.WidgetHostingService.GetWidgetCatalog()!.GetWidgetDefinition(widgetViewModel.Widget.DefinitionId);
 
