@@ -30,6 +30,8 @@ internal class SSHWalletWidget : CoreWidget
         set => SetState(value);
     }
 
+    protected string? UpdatedConfigFile { get; set; }
+
     public SSHWalletWidget()
     {
     }
@@ -273,12 +275,23 @@ internal class SSHWalletWidget : CoreWidget
             {
                 if (File.Exists(data))
                 {
-                    ConfigFile = data;
-                    SetupFileWatcher();
+                    if (data.Equals(ConfigFile, StringComparison.Ordinal))
+                    {
+                        SetupFileWatcher();
 
-                    var numberOfEntries = GetNumberOfHostEntries();
+                        var numberOfEntries = GetNumberOfHostEntries();
 
-                    configurationData = FillConfigurationData(true, ConfigFile, numberOfEntries, true);
+                        configurationData = FillConfigurationData(true, ConfigFile, numberOfEntries, true);
+                    }
+                    else
+                    {
+                        UpdatedConfigFile = data;
+                        SetupFileWatcher();
+
+                        var numberOfEntries = GetNumberOfHostEntries();
+
+                        configurationData = FillConfigurationData(true, UpdatedConfigFile, numberOfEntries, false);
+                    }
                 }
                 else
                 {
@@ -374,14 +387,19 @@ internal class SSHWalletWidget : CoreWidget
     {
         FileWatcher?.Dispose();
         ActivityState = WidgetActivityState.Configure;
-        var data = JsonSerializer.Deserialize<JsonObject>(ContentData);
-        if (data != null && !data.ContainsKey("configuring"))
+
+        if (currentConfigFile != string.Empty)
         {
-            data.Add("configuring", true);
-            ContentData = data.ToString();
+            var data = JsonSerializer.Deserialize<JsonObject>(ContentData);
+            if (data != null && !data.ContainsKey("configuring"))
+            {
+                data.Add("configuring", true);
+                ContentData = data.ToString();
+            }
+
+            ConfigFile = currentConfigFile;
         }
 
-        ConfigFile = currentConfigFile;
         Page = WidgetPageState.Configure;
         LogCurrentState();
         UpdateWidget();
